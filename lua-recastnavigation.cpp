@@ -55,16 +55,21 @@ create_meta(lua_State *L, luaL_Reg *l, const char *name, lua_CFunction tostring,
 
 struct s_navigation
 {
+    int64_t scene;
     RecastNavigationHandle *handle;
 };
 
 static int
 lnew(lua_State *L)
 {
+    int64_t scene = luaL_checknumber(L, 1);
+
     size_t l;
-    const char *respath = luaL_checklstring(L, 1, &l);
+    const char *respath = luaL_checklstring(L, 2, &l);
+
     struct s_navigation *nav = (struct s_navigation *)lua_newuserdata(L, sizeof(struct s_navigation));
-    memset(nav, 0, sizeof(*nav));
+    nav->scene = scene;
+    nav->handle = NULL;
 
     nav->handle = RecastNavigationHandle::Create(respath);
     if (!nav->handle)
@@ -82,12 +87,17 @@ static int
 lrelease(lua_State *L)
 {
     struct s_navigation *nav = (struct s_navigation *)check_userdata(L, 1);
-    if (nav)
+    printf("recastnavigation release [%lld]\n", nav->scene);
+
+    if (nav->handle)
     {
         delete nav->handle;
         nav->handle = NULL;
     }
-
+    else
+    {
+        printf("recastnavigation release handle is null");
+    }
     return 0;
 }
 
